@@ -1,11 +1,13 @@
 package main
 
 import (
-	"v1/internal/app"
-	"v1/internal/router"
+	"v1/app"
+	"v1/config/handlerprovider"
+	"v1/config/serviceprovider"
 )
 
 func main() {
-	router.BootRoutes()
-	app.Init()
+	serviceprovider.BindService()
+	handlerprovider.BindHandler()
+	app.StartServer()
 }
