@@ -1,15 +1,21 @@
 package serviceprovider
 
+import (
+	"v1/service"
+)
+
 /*
-* ' BindService() ' is the place where you can
-* bind all the services which implement service interface.
+* ' BindHandler() ' is the place where you can
+* bind all the handlers which implement Handler interface.
 **/
 
 func BindService() {
 
 	/*
-	* Bind Service
+	* Bind Handler
 	**/
 
-	RegisterService("TestService", nil)
+	RegisterService("userService", service.UserService{})
+	RegisterService("notifyService", service.NotifyService{})
+
 }

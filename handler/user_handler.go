@@ -1,18 +1,46 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"v1/config/serviceprovider"
 	"v1/model"
+	"v1/service"
 	"v1/util"
 )
 
 type UserHandler struct {
 	Id          string
 	Name        string
+	BusId       int
 	PickUpPoint string
 }
 
+var userService service.UserService
+
+func init() {
+	go func() {
+		userService = serviceprovider.GetService("userService").(service.UserService)
+	}()
+}
+
+// The main entry point of handler
 func (userHandler *UserHandler) Handle(w http.ResponseWriter, r *http.Request) {
+
+	log.Print("Reached Handle Function.")
+
+	userHandler.userHandlerGroup()
+
+	findTheFunction(r.Method, w, r)
+}
+
+// Grouping the register under the same api name "/users"
+func (userHandler *UserHandler) userHandlerGroup() {
+	funcMap["POST"] = userHandler.RegisterUser
+}
+
+// Registering new user to the database ( users, buses )
+func (userHandler *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	util.DecodeJson(r.Body, userHandler)
 
@@ -20,8 +48,33 @@ func (userHandler *UserHandler) Handle(w http.ResponseWriter, r *http.Request) {
 
 	user.SetId(userHandler.Id)
 	user.SetName(userHandler.Name)
+	user.SetBusId(userHandler.BusId)
 	user.SetPickUpPoint(userHandler.PickUpPoint)
 
-	user.RegisterNewUser(user)
+	status := userService.RegisterNewUser(user)
+
+	Response(&status, w)
+
+}
+
+// Giving back respective response
+func Response(status *bool, w http.ResponseWriter) {
+	response := model.SuccessResponse{}
+	err := model.Error{}
+
+	if *status {
+
+		response.SetStatus(200)
+		response.SetMessage("OK")
+
+		util.ParseResponse(w, response, 200)
+	} else {
+
+		err.SetErrorCode("INTERNAL_SERVER_ERROR")
+		err.SetStatus(500)
+		err.SetErrorMessage("Something went wrong.")
+
+		util.ParseResponse(w, response, 500)
+	}
 
 }

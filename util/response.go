@@ -1,19 +1,20 @@
 package util
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 )
 
-func Response(w http.ResponseWriter, responsePayload *[]byte) (int, error) {
+func ParseResponse(w http.ResponseWriter, responsePayload any, httpStatusCode int) {
 	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(httpStatusCode)
 
-	signal, err := w.Write(*responsePayload)
+	log.Printf("Response Payload : %v", responsePayload)
+
+	err := json.NewEncoder(w).Encode(responsePayload)
 
 	if err != nil {
-		log.Printf("Found error in pacakge pkg -> Response() : %s", err)
-		return signal, err
+		log.Fatalf("There was an error encoding json : %v", err)
 	}
-
-	return signal, err
 }

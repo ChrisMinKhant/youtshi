@@ -1,12 +1,9 @@
 package model
 
-import (
-	"v1/util"
-)
-
 type User struct {
 	id          string
 	name        string
+	busId       int
 	pickUpPoint string
 }
 
@@ -16,6 +13,10 @@ func (user *User) SetId(id string) {
 
 func (user *User) SetName(name string) {
 	user.name = name
+}
+
+func (user *User) SetBusId(busId int) {
+	user.busId = busId
 }
 
 func (user *User) SetPickUpPoint(pickUpPoint string) {
@@ -30,21 +31,14 @@ func (user *User) GetName() string {
 	return user.name
 }
 
+func (user *User) GetBusId() int {
+	return user.busId
+}
+
 func (user *User) GetPickUpPoint() string {
 	return user.pickUpPoint
 }
 
 func (user *User) Get() []any {
-	return []any{user.id, user.name, user.pickUpPoint}
-}
-
-// Register new user to the database.
-func (user *User) RegisterNewUser(newUser User) bool {
-	user.SetId(newUser.id)
-	user.SetName(newUser.name)
-	user.SetPickUpPoint(newUser.pickUpPoint)
-
-	util.BuildCreateQuery("Users", []string{"id", "name", "pickUpPoint"}, []any{user.GetId(), user.GetName(), user.GetPickUpPoint()})
-
-	return true
+	return []any{user.id, user.name, user.busId, user.pickUpPoint}
 }
