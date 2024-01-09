@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"v1/config/handlerprovider"
+	"v1/config/kafka"
 	"v1/util"
 )
 
@@ -29,8 +30,15 @@ func StartServer() {
 
 	showBanner()
 
+	// This is deticated go routines for kafka receiver.
+	go func() {
+		log.Printf("This is deticated go routine.")
+		kafka.Receive()
+	}()
+
 	log.Printf("Starting the server and listening at port >>> %s", serverPort)
 	http.ListenAndServe(serverPort, nil)
+
 }
 
 // Start the actual routing.
@@ -42,32 +50,16 @@ func startRoute() {
 
 func showBanner() {
 	banner := `
-                   .                          +
-      +                                                    .
-                                ___       .
-.                        _.--"~~ __"-.            
-                      ,-"     .-~  ~"-\          
-         .          .^       /       ( )      . 
-               +   {_.---._ /         ~        
-                   /    .  Y                   
-                  /      \_j                   
-   .             Y     ( --l__                 
-                 |            "-.              
-                 |      (___     \             
-         .       |        .)~-.__/             
-                 l        _)
-.                 \      "l                                
-    +              \       \                               
-                    \       ^.                             
-        .            ^.       "-.                   . 
-                       "-._      ~-.___,                   
-                 .         "--.._____.^                    
-  .                                         .    
-	 _             ____ _                 
-	| |    __ _   / ___| |__   __ _ _ __  
-	| |   / _\ | | |   | '_ \ / _\ | '_ \ 
-	| |__| (_| | | |___| | | | (_| | | | |
-	|_____\__,_|  \____|_| |_|\__,_|_| |_|`
-
+	*******************************************************
+	*                                                     *
+	* __   __  ___   ___  _   _   ____  _____  ___  _   _ *
+	*|  \ /  |/ _ \ / _ \| \ | | |  _ \|  ___)/ _ \| \ | |*
+	*|   v   | | | | | | |  \| | | |_) ) |_  | |_| |  \| |*
+	*| |\_/| | | | | | | |     | |  _ (|  _) |  _  |     |*
+	*| |   | | |_| | |_| | |\  | | |_) ) |___| | | | |\  |*
+	*|_|   |_|\___/ \___/|_| \_| |____/|_____)_| |_|_| \_|*
+	*                                                     *
+	*                                                     *
+	*******************************************************`
 	fmt.Println(banner + "\n")
 }
