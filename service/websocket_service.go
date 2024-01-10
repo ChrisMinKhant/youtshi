@@ -7,10 +7,14 @@ import (
 type WebsocketService struct {
 }
 
-func (websocketService *WebsocketService) pushNotification(w http.ResponseWriter, r *http.Request) {
-	// create websocket manager
-	websocketManager := NewManager()
+// create websocket manager
+var websocketManager = NewManager()
 
+func (websocketService *WebsocketService) RegisterConnection(w http.ResponseWriter, r *http.Request) {
 	// start websocket
 	websocketManager.startWebsocket(w, r)
+}
+
+func (websocketService *WebsocketService) PushNotification(message string) {
+	websocketManager.sendNotification(message)
 }

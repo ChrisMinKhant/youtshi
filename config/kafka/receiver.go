@@ -2,9 +2,19 @@ package kafka
 
 import (
 	"log"
+	"v1/config/serviceprovider"
+	"v1/service"
 
 	"github.com/IBM/sarama"
 )
+
+var websocketService service.WebsocketService
+
+func init() {
+	go func() {
+		websocketService = serviceprovider.GetService("websocketService").(service.WebsocketService)
+	}()
+}
 
 func Receive() {
 	// create kafka config
@@ -27,6 +37,8 @@ func Receive() {
 
 	for message := range consumer.Messages() {
 		log.Printf("Receiving message >>> key : %s, value : %s", message.Key, message.Value)
+
+		websocketService.PushNotification(string(message.Value))
 	}
 
 }

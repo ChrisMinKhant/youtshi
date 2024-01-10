@@ -14,6 +14,8 @@ var (
 	}
 )
 
+var connectionList = make(map[*websocket.Conn]struct{})
+
 type Manager struct {
 }
 
@@ -26,9 +28,21 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
+	connectionList[connection] = struct{}{}
+
 	if err != nil {
+		connection.Close()
 		log.Fatalf("Fatal error at websocket connection >>> %v", err)
 	}
+}
 
-	connection.Close()
+func (websockerManager *Manager) sendNotification(message string) {
+
+	for conn := range connectionList {
+		err := conn.WriteJSON(message)
+
+		if err != nil {
+			log.Fatalf("Fatal error in send notification from websocket >>> %v", err)
+		}
+	}
 }

@@ -8,10 +8,6 @@ import (
 )
 
 type WebsocketHandler struct {
-	Id          string
-	Name        string
-	BusId       int
-	PickUpPoint string
 }
 
 var websocketService service.WebsocketService
@@ -38,5 +34,5 @@ func (websocketHandler *WebsocketHandler) websocketHandlerGroup() {
 }
 
 func (websocketHandler *WebsocketHandler) notifyUsers(w http.ResponseWriter, r *http.Request) {
-
+	websocketService.RegisterConnection(w, r)
 }
