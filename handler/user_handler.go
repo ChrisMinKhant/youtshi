@@ -56,25 +56,3 @@ func (userHandler *UserHandler) RegisterUser(w http.ResponseWriter, r *http.Requ
 	Response(&status, w)
 
 }
-
-// Giving back respective response
-func Response(status *bool, w http.ResponseWriter) {
-	response := model.SuccessResponse{}
-	err := model.Error{}
-
-	if *status {
-
-		response.SetStatus(200)
-		response.SetMessage("OK")
-
-		util.ParseResponse(w, response, 200)
-	} else {
-
-		err.SetErrorCode("INTERNAL_SERVER_ERROR")
-		err.SetStatus(500)
-		err.SetErrorMessage("Something went wrong.")
-
-		util.ParseResponse(w, response, 500)
-	}
-
-}

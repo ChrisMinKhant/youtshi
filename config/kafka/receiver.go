@@ -7,15 +7,18 @@ import (
 )
 
 func Receive() {
+	// create kafka config
 	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
 
+	// make a connection to kafka server
 	connection, err := sarama.NewConsumer([]string{KafkaServerAddress}, config)
 
 	if err != nil {
 		log.Fatalf("Fatal error at creating kafka consumer : %v", err)
 	}
 
+	// consume from topic
 	consumer, consumerErr := connection.ConsumePartition(KafkaTopic, 0, sarama.OffsetNewest)
 
 	if consumerErr != nil {

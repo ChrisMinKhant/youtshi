@@ -17,5 +17,5 @@ func BindService() {
 
 	RegisterService("userService", service.UserService{})
 	RegisterService("notifyService", service.NotifyService{})
-
+	RegisterService("websocketService", service.WebsocketService{})
 }
