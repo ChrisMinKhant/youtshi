@@ -38,7 +38,7 @@ func Receive() {
 	for message := range consumer.Messages() {
 		log.Printf("Receiving message >>> key : %s, value : %s", message.Key, message.Value)
 
-		websocketService.PushNotification(string(message.Value))
+		// websocketService.PushNotification(string(message.Value))
 	}
 
 }

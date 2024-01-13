@@ -2,7 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"v1/config/kafka"
 	"v1/config/serviceprovider"
 	"v1/model"
 	"v1/service"
@@ -19,6 +18,7 @@ var notifyService service.NotifyService
 func init() {
 	go func() {
 		notifyService = serviceprovider.GetService("notifyService").(service.NotifyService)
+		websocketService = serviceprovider.GetService("websocketService").(service.WebsocketService)
 	}()
 }
 
@@ -35,9 +35,10 @@ func (notifyHandler *NotifyHandler) notifyHandlerGroup() {
 func (notifyHandler *NotifyHandler) notify(w http.ResponseWriter, r *http.Request) {
 	util.DecodeJson(r.Body, notifyHandler)
 
-	kafka.Send(notifyHandler.BusNumber, notifyHandler.ArrivedAddress)
+	websocketService.PushNotification(notifyHandler.BusNumber, notifyHandler.ArrivedAddress)
+	// kafka.Send(notifyHandler.BusNumber, notifyHandler.ArrivedAddress)
 
-	notifyService.DropMessageToKafka([]any{notifyHandler.BusNumber, notifyHandler.ArrivedAddress})
+	// notifyService.DropMessageToKafka([]any{notifyHandler.BusNumber, notifyHandler.ArrivedAddress})
 
 	successResponse := model.SuccessResponse{}
 

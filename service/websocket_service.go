@@ -15,6 +15,6 @@ func (websocketService *WebsocketService) RegisterConnection(w http.ResponseWrit
 	websocketManager.startWebsocket(w, r)
 }
 
-func (websocketService *WebsocketService) PushNotification(message string) {
-	websocketManager.sendNotification(message)
+func (websocketService *WebsocketService) PushNotification(busNumber int, message string) {
+	websocketManager.sendNotification(busNumber, message)
 }
