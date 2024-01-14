@@ -7,6 +7,10 @@ import (
 type WebsocketService struct {
 }
 
+func NewWebsocketService() *WebsocketService {
+	return &WebsocketService{}
+}
+
 // create websocket manager
 var websocketManager = NewManager()
 

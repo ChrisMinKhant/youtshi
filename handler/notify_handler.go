@@ -35,10 +35,9 @@ func (notifyHandler *NotifyHandler) notifyHandlerGroup() {
 func (notifyHandler *NotifyHandler) notify(w http.ResponseWriter, r *http.Request) {
 	util.DecodeJson(r.Body, notifyHandler)
 
-	websocketService.PushNotification(notifyHandler.BusNumber, notifyHandler.ArrivedAddress)
-	// kafka.Send(notifyHandler.BusNumber, notifyHandler.ArrivedAddress)
-
-	// notifyService.DropMessageToKafka([]any{notifyHandler.BusNumber, notifyHandler.ArrivedAddress})
+	notifyService.SetBusNumber(notifyHandler.BusNumber)
+	notifyService.SetArrivedAddress(notifyHandler.ArrivedAddress)
+	notifyService.SendNotification()
 
 	successResponse := model.SuccessResponse{}
 
