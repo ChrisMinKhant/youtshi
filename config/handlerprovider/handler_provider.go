@@ -13,7 +13,6 @@ func BindHandler() {
 	* Bind Handler
 	**/
 
-	RegisterHandler("/users", &handler.UserHandler{})
 	RegisterHandler("/notify", &handler.NotifyHandler{})
 	RegisterHandler("/ws", &handler.WebsocketHandler{})
 

@@ -50,6 +50,8 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 // Sending live data to the client
 func (websockerManager *Manager) sendNotification(busNumber int, message string) {
 
+	busService.UpdateBusInfo(busNumber, message)
+
 	for conn := range connectionList {
 		if connectionList[conn].busNumber != busNumber {
 			continue
@@ -72,6 +74,13 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 	}
 
 	readError := connection.ReadJSON(payload)
+
+	// Check if bus exists
+	if !busService.IsBusExist(payload.BusNumber) {
+
+		// If it isn't, create new bus
+		busService.RegisterNewBus(payload.BusNumber)
+	}
 
 	if readError != nil {
 		log.Fatalf("Found error while reading json message from websocket >>> %v", readError)

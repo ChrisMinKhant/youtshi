@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"v1/config/handlerprovider"
-	"v1/config/kafka"
 	"v1/util"
 )
 
@@ -29,12 +28,6 @@ func StartServer() {
 	startRoute()
 
 	showBanner()
-
-	// This is deticated go routines for kafka receiver.
-	go func() {
-		log.Printf("This is deticated go routine.")
-		kafka.Receive()
-	}()
 
 	log.Printf("Starting the server and listening at port >>> %s", serverPort)
 	http.ListenAndServe(serverPort, nil)

@@ -76,3 +76,32 @@ func BuildSelectQuery(tableName string, indentifier string, condition []any) *sq
 
 	return result
 }
+
+func BuildUpdateQuery(tableName string, columns []string, indentifier string, condition []any, values []any) {
+	db := OpenConnection()
+	var columnString string
+
+	for i := range columns {
+		if i != 0 {
+			columnString = columnString + ", " + columns[i] + "= ?"
+		} else {
+			columnString = columnString + columns[i] + "= ? "
+		}
+	}
+
+	// UPDATE tablename SET column=value WHERE indentifier=condition
+	statement, err := db.Prepare("UPDATE " + tableName + "SET " + columnString + " WHERE " + indentifier + "= ?")
+	if err != nil {
+		log.Fatalf("There is an error at preparing query >>> %v", err.Error())
+	}
+
+	// error here
+	result, err := statement.Exec([]any{condition})
+
+	if err != nil {
+		log.Fatalf("There is an error at executing query >>> %v", err.Error())
+	}
+
+	log.Printf("Fetched update query result >>> %v", result)
+
+}
