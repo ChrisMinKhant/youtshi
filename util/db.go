@@ -13,8 +13,8 @@ import (
  */
 
 var conf = mysql.Config{
-	User:                 GetEvnValue("db.username"),
-	Passwd:               GetEvnValue("db.password"),
+	User: GetEvnValue("db.username"),
+	// Passwd:               GetEvnValue("db.password"),
 	Net:                  GetEvnValue("db.net"),
 	Addr:                 GetEvnValue("db.address"),
 	DBName:               GetEvnValue("db.DbName"),
@@ -83,23 +83,19 @@ func BuildUpdateQuery(tableName string, columns []string, indentifier string, co
 
 	for i := range columns {
 		if i != 0 {
-			columnString = columnString + ", " + columns[i] + "= ?"
+			columnString = columnString + ", " + columns[i] + "= \"" + values[i].(string) + "\""
 		} else {
-			columnString = columnString + columns[i] + "= ? "
+			columnString = columnString + columns[i] + "=\"" + values[i].(string) + "\""
 		}
 	}
 
+	log.Printf(columnString)
+
 	// UPDATE tablename SET column=value WHERE indentifier=condition
-	statement, err := db.Prepare("UPDATE " + tableName + "SET " + columnString + " WHERE " + indentifier + "= ?")
+	result, err := db.Query("UPDATE "+tableName+" SET "+columnString+" WHERE "+indentifier+"=?", condition...)
+
 	if err != nil {
 		log.Fatalf("There is an error at preparing query >>> %v", err.Error())
-	}
-
-	// error here
-	result, err := statement.Exec([]any{condition})
-
-	if err != nil {
-		log.Fatalf("There is an error at executing query >>> %v", err.Error())
 	}
 
 	log.Printf("Fetched update query result >>> %v", result)
