@@ -3,6 +3,7 @@ package service
 import (
 	"log"
 	"net/http"
+	"v1/util"
 
 	"github.com/gorilla/websocket"
 )
@@ -76,10 +77,14 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 	readError := connection.ReadJSON(payload)
 
 	// Check if bus exists
-	if !busService.IsBusExist(payload.BusNumber) {
-
-		// If it isn't, create new bus
-		busService.RegisterNewBus(payload.BusNumber)
+	if status, err := busService.IsBusExist(payload.BusNumber); err == nil {
+		if !status {
+			// If it isn't, create new bus
+			busService.RegisterNewBus(payload.BusNumber)
+		}
+	} else if err != nil {
+		log.Printf("There is an error >>> %v,%v,%v", err.Get()...)
+		util.ParseResponse(w, err, err.GetStatus())
 	}
 
 	if readError != nil {

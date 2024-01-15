@@ -3,6 +3,7 @@ package util
 import (
 	"database/sql"
 	"log"
+	"v1/model"
 
 	"github.com/go-sql-driver/mysql"
 )
@@ -13,13 +14,15 @@ import (
  */
 
 var conf = mysql.Config{
-	User: GetEvnValue("db.username"),
-	// Passwd:               GetEvnValue("db.password"),
+	User:                 GetEvnValue("db.username"),
+	Passwd:               GetEvnValue("db.password"),
 	Net:                  GetEvnValue("db.net"),
 	Addr:                 GetEvnValue("db.address"),
 	DBName:               GetEvnValue("db.DbName"),
 	AllowNativePasswords: true,
 }
+
+var ErrorReponse = model.NewError()
 
 // Connect to the datbase.
 func OpenConnection() *sql.DB {
@@ -27,13 +30,13 @@ func OpenConnection() *sql.DB {
 	db, err := sql.Open("mysql", conf.FormatDSN())
 
 	if err != nil {
-		log.Fatalf("Error at database connection >>> %s", err.Error())
+		log.Panicf("Error connecting database >>> %s", err.Error())
 	}
 
 	pingErr := db.Ping()
 
 	if pingErr != nil {
-		log.Fatalf("Error at database ping >>> %s", pingErr.Error())
+		log.Panicf("Error pinging database >>> %s", pingErr.Error())
 	}
 
 	log.Printf("Connnected to a database >>> %v", db.Stats().OpenConnections)
@@ -44,6 +47,9 @@ func OpenConnection() *sql.DB {
 // Build create query for inserting new data to the table.
 func BuildCreateQuery(tableName string, columns []string, values []any) {
 	db := OpenConnection()
+
+	defer db.Close()
+
 	var columnString string
 	var valueString string
 
@@ -60,25 +66,46 @@ func BuildCreateQuery(tableName string, columns []string, values []any) {
 	result, err := db.Query("INSERT INTO "+tableName+"("+columnString+") VALUES("+valueString+")", values...)
 
 	if err != nil {
-		log.Fatalf("There is an error at quering >>> %v", err.Error())
+		log.Panicf("Error building create query >>> %v", err.Error())
 	}
 
-	log.Printf("Query Result >>> %v", result)
+	log.Printf("Fetched query resul >>> %v", result)
 }
 
-func BuildSelectQuery(tableName string, indentifier string, condition []any) *sql.Rows {
+// Build select query for retriving data from database
+func BuildSelectQuery(tableName string, indentifier string, condition []any) (*sql.Rows, *model.Error) {
 	db := OpenConnection()
-	result, err := db.Query("SELECT * FROM "+tableName+" WHERE "+indentifier+"= ?", condition...)
+
+	defer db.Close()
+
+	defer func() (*sql.Rows, *model.Error) {
+		if recoveryStatus := recover(); recoveryStatus != nil {
+			log.Printf("System was recovered from error >>> %v", recoveryStatus)
+			return nil, ErrorReponse.Set(model.I500, 500, recoveryStatus.(string))
+		}
+
+		log.Printf("System cannot be recovered.")
+		return nil, ErrorReponse.Set(model.I500, 500, "Unknown error occured.")
+	}()
+
+	result, err := db.Query("SELECT * FRO "+tableName+" WHERE "+indentifier+"= ?", condition...)
 
 	if err != nil {
-		log.Fatalf("There is an error at quering >>> %v", err.Error())
+		ErrorReponse.Set(model.I500, 500, "Unknown error occured.")
+		log.Panicf("Error building select query >>> %v", err.Error())
+
+		return nil, ErrorReponse
 	}
 
-	return result
+	return result, nil
 }
 
+// Build update query for updating data to the database
 func BuildUpdateQuery(tableName string, columns []string, indentifier string, condition []any, values []any) {
 	db := OpenConnection()
+
+	defer db.Close()
+
 	var columnString string
 
 	for i := range columns {
@@ -89,15 +116,12 @@ func BuildUpdateQuery(tableName string, columns []string, indentifier string, co
 		}
 	}
 
-	log.Printf(columnString)
-
-	// UPDATE tablename SET column=value WHERE indentifier=condition
 	result, err := db.Query("UPDATE "+tableName+" SET "+columnString+" WHERE "+indentifier+"=?", condition...)
 
 	if err != nil {
-		log.Fatalf("There is an error at preparing query >>> %v", err.Error())
+		log.Fatalf("Error building update query >>> %v", err.Error())
 	}
 
-	log.Printf("Fetched update query result >>> %v", result)
+	log.Printf("Fetched query result >>> %v", result)
 
 }

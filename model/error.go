@@ -1,35 +1,47 @@
 package model
 
 type Error struct {
-	ErrorCode    string
-	Status       int
-	ErrorMessage string
+	errorCode    string
+	status       int
+	errorMessage string
+}
+
+func NewError() *Error {
+	return &Error{}
 }
 
 func (errorStruct *Error) GetErrorCode() string {
-	return errorStruct.ErrorCode
+	return errorStruct.errorCode
 }
 
 func (errorStruct *Error) GetStatus() int {
-	return errorStruct.Status
+	return errorStruct.status
 }
 
 func (errorStruct *Error) GetErrorMessage() string {
-	return errorStruct.ErrorMessage
+	return errorStruct.errorMessage
 }
 
 func (errorStruct *Error) SetErrorCode(errorCode string) {
-	errorStruct.ErrorCode = errorCode
+	errorStruct.errorCode = errorCode
 }
 
 func (errorStruct *Error) SetStatus(status int) {
-	errorStruct.Status = status
+	errorStruct.status = status
 }
 
 func (errorStruct *Error) SetErrorMessage(errorMessage string) {
-	errorStruct.ErrorMessage = errorMessage
+	errorStruct.errorMessage = errorMessage
 }
 
 func (errorStruct *Error) Get() []any {
-	return []any{errorStruct.ErrorCode, errorStruct.Status, errorStruct.ErrorMessage}
+	return []any{errorStruct.errorCode, errorStruct.status, errorStruct.errorMessage}
+}
+
+func (errorStruct *Error) Set(errorCode string, errorStatus int, errorMessage string) *Error {
+	return &Error{
+		errorCode:    errorCode,
+		status:       errorStatus,
+		errorMessage: errorMessage,
+	}
 }

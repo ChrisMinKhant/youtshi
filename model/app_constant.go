@@ -1,0 +1,5 @@
+package model
+
+var I500 = "INTERNAL SERVER ERROR"
+var B400 = "BAD REQUEST"
+var NF404 = "RESOURCE NOT FOUND"
