@@ -1,5 +1,7 @@
 package service
 
+import "v1/model"
+
 type NotifyService struct {
 	BusNumber      int
 	ArrivedAddress string
@@ -16,6 +18,6 @@ func (notifyService *NotifyService) SetArrivedAddress(arriveAddress string) {
 }
 
 // Send notification to client through websocket
-func (notifyService *NotifyService) SendNotification() {
-	websocketService.PushNotification(notifyService.BusNumber, notifyService.ArrivedAddress)
+func (notifyService *NotifyService) SendNotification() *model.Error {
+	return websocketService.PushNotification(notifyService.BusNumber, notifyService.ArrivedAddress)
 }

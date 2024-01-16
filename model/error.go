@@ -1,9 +1,9 @@
 package model
 
 type Error struct {
-	errorCode    string
-	status       int
-	errorMessage string
+	ErrorCode    string `json:"errorCode"`
+	Status       int    `json:"status"`
+	ErrorMessage string `json:"errorMessage"`
 }
 
 func NewError() *Error {
@@ -11,37 +11,37 @@ func NewError() *Error {
 }
 
 func (errorStruct *Error) GetErrorCode() string {
-	return errorStruct.errorCode
+	return errorStruct.ErrorCode
 }
 
 func (errorStruct *Error) GetStatus() int {
-	return errorStruct.status
+	return errorStruct.Status
 }
 
 func (errorStruct *Error) GetErrorMessage() string {
-	return errorStruct.errorMessage
+	return errorStruct.ErrorMessage
 }
 
 func (errorStruct *Error) SetErrorCode(errorCode string) {
-	errorStruct.errorCode = errorCode
+	errorStruct.ErrorCode = errorCode
 }
 
 func (errorStruct *Error) SetStatus(status int) {
-	errorStruct.status = status
+	errorStruct.Status = status
 }
 
 func (errorStruct *Error) SetErrorMessage(errorMessage string) {
-	errorStruct.errorMessage = errorMessage
+	errorStruct.ErrorMessage = errorMessage
 }
 
 func (errorStruct *Error) Get() []any {
-	return []any{errorStruct.errorCode, errorStruct.status, errorStruct.errorMessage}
+	return []any{errorStruct.ErrorCode, errorStruct.Status, errorStruct.ErrorMessage}
 }
 
 func (errorStruct *Error) Set(errorCode string, errorStatus int, errorMessage string) *Error {
 	return &Error{
-		errorCode:    errorCode,
-		status:       errorStatus,
-		errorMessage: errorMessage,
+		ErrorCode:    errorCode,
+		Status:       errorStatus,
+		ErrorMessage: errorMessage,
 	}
 }

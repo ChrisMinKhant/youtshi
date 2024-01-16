@@ -39,8 +39,8 @@ func (busService *BusService) IsBusExist(id int) (bool, *model.Error) {
 	return true, nil
 }
 
-func (busService *BusService) RegisterNewBus(id int) {
-	util.BuildCreateQuery("buses", []string{"id", "latest_location"}, []any{id, nil})
+func (busService *BusService) RegisterNewBus(id int) *model.Error {
+	return util.BuildCreateQuery("buses", []string{"id", "latest_location"}, []any{id, nil})
 }
 
 func (busService *BusService) UpdateBusInfo(id int, latestLocation string) *model.Error {
@@ -52,7 +52,11 @@ func (busService *BusService) UpdateBusInfo(id int, latestLocation string) *mode
 		return err
 	}
 
-	util.BuildUpdateQuery("buses", []string{"latest_location"}, "id", []any{id}, []any{latestLocation})
+	buildUpdateQueryError := util.BuildUpdateQuery("buses", []string{"latest_location"}, "id", []any{id}, []any{latestLocation})
+
+	if buildUpdateQueryError != nil {
+		return buildUpdateQueryError
+	}
 
 	return nil
 }

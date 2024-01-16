@@ -14,8 +14,8 @@ import (
  */
 
 var conf = mysql.Config{
-	User: GetEvnValue("db.username"),
-	// Passwd:               GetEvnValue("db.password"),
+	User:                 GetEvnValue("db.username"),
+	Passwd:               GetEvnValue("db.password"),
 	Net:                  GetEvnValue("db.net"),
 	Addr:                 GetEvnValue("db.address"),
 	DBName:               GetEvnValue("db.DbName"),
@@ -45,7 +45,7 @@ func OpenConnection() *sql.DB {
 }
 
 // Build create query for inserting new data to the table.
-func BuildCreateQuery(tableName string, columns []string, values []any) {
+func BuildCreateQuery(tableName string, columns []string, values []any) *model.Error {
 	db := OpenConnection()
 
 	defer db.Close()
@@ -66,10 +66,14 @@ func BuildCreateQuery(tableName string, columns []string, values []any) {
 	result, err := db.Query("INSERT INTO "+tableName+"("+columnString+") VALUES("+valueString+")", values...)
 
 	if err != nil {
-		log.Panicf("Error building create query >>> %v", err.Error())
+		log.Printf("Error building create query >>> %v", err.Error())
+
+		return model.NewError().Set(model.I500, 500, err.Error())
 	}
 
 	log.Printf("Fetched query resul >>> %v", result)
+
+	return nil
 }
 
 // Build select query for retriving data from database
@@ -86,7 +90,7 @@ func BuildSelectQuery(tableName string, indentifier string, condition []any, err
 			return
 		}
 		log.Printf("System cannot be recovered.")
-		*errorChannel <- *model.NewError().Set(model.I500, 500, "Unknown Error Occured")
+		*errorChannel <- *model.NewError().Set(model.I500, 500, "Unknown error occured")
 
 		return
 	}()
@@ -101,7 +105,7 @@ func BuildSelectQuery(tableName string, indentifier string, condition []any, err
 }
 
 // Build update query for updating data to the database
-func BuildUpdateQuery(tableName string, columns []string, indentifier string, condition []any, values []any) {
+func BuildUpdateQuery(tableName string, columns []string, indentifier string, condition []any, values []any) *model.Error {
 	db := OpenConnection()
 
 	defer db.Close()
@@ -119,9 +123,13 @@ func BuildUpdateQuery(tableName string, columns []string, indentifier string, co
 	result, err := db.Query("UPDATE "+tableName+" SET "+columnString+" WHERE "+indentifier+"=?", condition...)
 
 	if err != nil {
-		log.Fatalf("Error building update query >>> %v", err.Error())
+		log.Printf("Error building update query >>> %v", err.Error())
+
+		return model.NewError().Set(model.I500, 500, err.Error())
 	}
 
 	log.Printf("Fetched query result >>> %v", result)
+
+	return nil
 
 }

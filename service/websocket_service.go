@@ -2,6 +2,7 @@ package service
 
 import (
 	"net/http"
+	"v1/model"
 )
 
 type WebsocketService struct {
@@ -21,7 +22,7 @@ func (websocketService *WebsocketService) RegisterConnection(w http.ResponseWrit
 	websocketManager.startWebsocket(w, r)
 }
 
-func (websocketService *WebsocketService) PushNotification(busNumber int, message string) {
+func (websocketService *WebsocketService) PushNotification(busNumber int, message string) *model.Error {
 
-	websocketManager.sendNotification(busNumber, message)
+	return websocketManager.sendNotification(busNumber, message)
 }

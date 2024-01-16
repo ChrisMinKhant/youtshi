@@ -37,12 +37,16 @@ func (notifyHandler *NotifyHandler) notify(w http.ResponseWriter, r *http.Reques
 
 	notifyService.SetBusNumber(notifyHandler.BusNumber)
 	notifyService.SetArrivedAddress(notifyHandler.ArrivedAddress)
-	notifyService.SendNotification()
+	err := notifyService.SendNotification()
+	if err != nil {
+		util.ParseResponse(w, err, err.Status)
+	} else {
 
-	successResponse := model.SuccessResponse{}
+		successResponse := model.SuccessResponse{}
 
-	successResponse.SetStatus(200)
-	successResponse.SetMessage("OK")
+		successResponse.SetStatus(200)
+		successResponse.SetMessage("OK")
 
-	util.ParseResponse(w, successResponse, 200)
+		util.ParseResponse(w, successResponse, 200)
+	}
 }

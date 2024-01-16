@@ -1,9 +1,9 @@
 package service
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
+	"v1/model"
 
 	"github.com/gorilla/websocket"
 )
@@ -49,11 +49,16 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 }
 
 // Sending live data to the client
-func (websockerManager *Manager) sendNotification(busNumber int, message string) {
+func (websockerManager *Manager) sendNotification(busNumber int, message string) *model.Error {
 
-	busService.UpdateBusInfo(busNumber, message)
+	updateBusInfoError := busService.UpdateBusInfo(busNumber, message)
+
+	if updateBusInfoError != nil {
+		return updateBusInfoError
+	}
 
 	for conn := range connectionList {
+
 		if connectionList[conn].busNumber != busNumber {
 			continue
 		}
@@ -61,17 +66,22 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 		err := connectionList[conn].connection.WriteJSON(message)
 
 		if err != nil {
-			log.Fatalf("Found error while writing json message >>> %v", err)
+			return model.NewError().Set(model.I500, 500, err.Error())
 		}
 	}
+
+	return nil
 }
 
 // Establishing the connection and return Client struct
 func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *http.Request, payload *NotifyBus) Client {
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
+	// catch panics and return response to the client
+	defer foundPanic(connection, model.NewError().Set(model.I500, 500, "Unknown error occurred"))
+
 	if err != nil {
-		log.Fatalf("Found error while upgrading connection >>> %v", err)
+		log.Panicf("Found error while upgrading connection >>> %v", err)
 	}
 
 	readError := connection.ReadJSON(payload)
@@ -80,22 +90,19 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 	if status, err := busService.IsBusExist(payload.BusNumber); err == nil {
 		if !status {
 			// If it isn't, create new bus
-			busService.RegisterNewBus(payload.BusNumber)
+			registerNewBusError := busService.RegisterNewBus(payload.BusNumber)
+
+			if registerNewBusError != nil {
+				log.Panicf(registerNewBusError.ErrorMessage)
+			}
 		}
 	} else if err != nil {
-		log.Printf("There is an error >>> %v,%v,%v", err.Get()...)
-		// util.ParseResponse(w, err, err.GetStatus())
-
-		// Working on this area
-		marshaledJson, marshalError := json.Marshal(err)
-
-		if marshalError == nil {
-			connection.WriteJSON(json.Unmarshal(marshaledJson))
-		}
+		log.Panicf(err.ErrorMessage)
 	}
 
 	if readError != nil {
-		log.Fatalf("Found error while reading json message from websocket >>> %v", readError)
+		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
+
 	}
 
 	return Client{
@@ -103,4 +110,8 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 		connection: connection,
 	}
 
+}
+
+func foundPanic(connection *websocket.Conn, errorDetail *model.Error) {
+	connection.WriteJSON(errorDetail)
 }
