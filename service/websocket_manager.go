@@ -1,9 +1,9 @@
 package service
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"v1/util"
 
 	"github.com/gorilla/websocket"
 )
@@ -84,7 +84,14 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 		}
 	} else if err != nil {
 		log.Printf("There is an error >>> %v,%v,%v", err.Get()...)
-		util.ParseResponse(w, err, err.GetStatus())
+		// util.ParseResponse(w, err, err.GetStatus())
+
+		// Working on this area
+		marshaledJson, marshalError := json.Marshal(err)
+
+		if marshalError == nil {
+			connection.WriteJSON(json.Unmarshal(marshaledJson))
+		}
 	}
 
 	if readError != nil {

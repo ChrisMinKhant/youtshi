@@ -14,8 +14,8 @@ import (
  */
 
 var conf = mysql.Config{
-	User:                 GetEvnValue("db.username"),
-	Passwd:               GetEvnValue("db.password"),
+	User: GetEvnValue("db.username"),
+	// Passwd:               GetEvnValue("db.password"),
 	Net:                  GetEvnValue("db.net"),
 	Addr:                 GetEvnValue("db.address"),
 	DBName:               GetEvnValue("db.DbName"),
@@ -73,31 +73,31 @@ func BuildCreateQuery(tableName string, columns []string, values []any) {
 }
 
 // Build select query for retriving data from database
-func BuildSelectQuery(tableName string, indentifier string, condition []any) (*sql.Rows, *model.Error) {
+func BuildSelectQuery(tableName string, indentifier string, condition []any, errorChannel *chan model.Error) *sql.Rows {
 	db := OpenConnection()
 
 	defer db.Close()
 
-	defer func() (*sql.Rows, *model.Error) {
+	defer func() {
 		if recoveryStatus := recover(); recoveryStatus != nil {
 			log.Printf("System was recovered from error >>> %v", recoveryStatus)
-			return nil, ErrorReponse.Set(model.I500, 500, recoveryStatus.(string))
-		}
+			*errorChannel <- *model.NewError().Set(model.I500, 500, recoveryStatus.(string))
 
+			return
+		}
 		log.Printf("System cannot be recovered.")
-		return nil, ErrorReponse.Set(model.I500, 500, "Unknown error occured.")
+		*errorChannel <- *model.NewError().Set(model.I500, 500, "Unknown Error Occured")
+
+		return
 	}()
 
 	result, err := db.Query("SELECT * FRO "+tableName+" WHERE "+indentifier+"= ?", condition...)
 
 	if err != nil {
-		ErrorReponse.Set(model.I500, 500, "Unknown error occured.")
 		log.Panicf("Error building select query >>> %v", err.Error())
-
-		return nil, ErrorReponse
 	}
 
-	return result, nil
+	return result
 }
 
 // Build update query for updating data to the database
