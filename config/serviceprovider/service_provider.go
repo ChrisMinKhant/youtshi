@@ -1,6 +1,7 @@
 package serviceprovider
 
 import (
+	"log"
 	"v1/service"
 )
 
@@ -10,11 +11,11 @@ import (
 **/
 
 func BindService() {
-
 	/*
 	* Bind Handler
 	**/
+	log.Printf("Binding service...")
 
-	RegisterService("notifyService", service.NotifyService{})
-	RegisterService("websocketService", service.WebsocketService{})
+	defer RegisterService("notifyService", service.NewNotifyService())
+	defer RegisterService("websocketService", service.NewWebsocketService())
 }

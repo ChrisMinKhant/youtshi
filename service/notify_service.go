@@ -9,6 +9,10 @@ type NotifyService struct {
 
 var websocketService = NewWebsocketService()
 
+func NewNotifyService() *NotifyService {
+	return &NotifyService{}
+}
+
 func (notifyService *NotifyService) SetBusNumber(busNumber int) {
 	notifyService.BusNumber = busNumber
 }

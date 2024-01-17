@@ -1,6 +1,9 @@
 package handlerprovider
 
-import "v1/handler"
+import (
+	"log"
+	"v1/handler"
+)
 
 /*
 * ' BindHandler() ' is the place where you can
@@ -12,8 +15,7 @@ func BindHandler() {
 	/*
 	* Bind Handler
 	**/
-
-	RegisterHandler("/notify", &handler.NotifyHandler{})
-	RegisterHandler("/ws", &handler.WebsocketHandler{})
-
+	log.Print("Binding handler...")
+	RegisterHandler("/notify", handler.NewNotifyHandler())
+	RegisterHandler("/ws", handler.NewWebsocketHandler())
 }

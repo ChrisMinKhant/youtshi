@@ -78,9 +78,10 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
 	// catch panics and return response to the client
-	defer foundPanic(connection, model.NewError().Set(model.I500, 500, "Unknown error occurred"))
+	defer foundPanic(connection, model.I500, 500)
 
 	if err != nil {
+		log.Printf("Fetched read error >>> %v", err.Error())
 		log.Panicf("Found error while upgrading connection >>> %v", err)
 	}
 
@@ -93,14 +94,17 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 			registerNewBusError := busService.RegisterNewBus(payload.BusNumber)
 
 			if registerNewBusError != nil {
+				log.Printf("Fetched read error >>> %v", registerNewBusError.Get()...)
 				log.Panicf(registerNewBusError.ErrorMessage)
 			}
 		}
 	} else if err != nil {
+		log.Printf("Fetched read error >>> %v", err.Get()...)
 		log.Panicf(err.ErrorMessage)
 	}
 
 	if readError != nil {
+		log.Printf("Fetched read error >>> %v", readError.Error())
 		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
 
 	}
@@ -112,6 +116,8 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 
 }
 
-func foundPanic(connection *websocket.Conn, errorDetail *model.Error) {
-	connection.WriteJSON(errorDetail)
+func foundPanic(connection *websocket.Conn, errorCode string, errorStatus int) {
+	if recoveryStatus := recover(); recoveryStatus != nil {
+		connection.WriteJSON(model.NewError().Set(errorCode, errorStatus, recoveryStatus.(string)))
+	}
 }

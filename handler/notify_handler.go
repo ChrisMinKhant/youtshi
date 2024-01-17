@@ -13,13 +13,8 @@ type NotifyHandler struct {
 	ArrivedAddress string
 }
 
-var notifyService service.NotifyService
-
-func init() {
-	go func() {
-		notifyService = serviceprovider.GetService("notifyService").(service.NotifyService)
-		websocketService = serviceprovider.GetService("websocketService").(service.WebsocketService)
-	}()
+func NewNotifyHandler() *NotifyHandler {
+	return &NotifyHandler{}
 }
 
 func (notifyHandler *NotifyHandler) Handle(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +28,9 @@ func (notifyHandler *NotifyHandler) notifyHandlerGroup() {
 }
 
 func (notifyHandler *NotifyHandler) notify(w http.ResponseWriter, r *http.Request) {
+
+	notifyService := serviceprovider.GetService("notifyService").(*service.NotifyService)
+
 	util.DecodeJson(r.Body, notifyHandler)
 
 	notifyService.SetBusNumber(notifyHandler.BusNumber)

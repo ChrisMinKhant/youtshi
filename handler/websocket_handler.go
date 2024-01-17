@@ -10,12 +10,8 @@ import (
 type WebsocketHandler struct {
 }
 
-var websocketService service.WebsocketService
-
-func init() {
-	go func() {
-		websocketService = serviceprovider.GetService("websocketService").(service.WebsocketService)
-	}()
+func NewWebsocketHandler() *WebsocketHandler {
+	return &WebsocketHandler{}
 }
 
 // The main entry point of handler
@@ -34,5 +30,6 @@ func (websocketHandler *WebsocketHandler) websocketHandlerGroup() {
 }
 
 func (websocketHandler *WebsocketHandler) notifyUsers(w http.ResponseWriter, r *http.Request) {
+	websocketService := serviceprovider.GetService("websocketService").(*service.WebsocketService)
 	websocketService.RegisterConnection(w, r)
 }

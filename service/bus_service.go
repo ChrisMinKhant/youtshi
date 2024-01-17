@@ -23,13 +23,11 @@ func NewBusService() *BusService {
 
 func (busService *BusService) IsBusExist(id int) (bool, *model.Error) {
 
-	errorChannel := make(chan model.Error, 1)
+	queryResult, err := util.BuildSelectQuery("buses", "id", []any{id})
 
-	queryResult := util.BuildSelectQuery("buses", "id", []any{id}, &errorChannel)
-
-	if err := <-errorChannel; err.GetStatus() != 0 {
+	if err != nil {
 		log.Printf("There is an error at IsBusExist() >>> %v,%v,%v", err.Get()...)
-		return false, &err
+		return false, err
 	}
 
 	if !queryResult.Next() {
