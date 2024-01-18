@@ -16,9 +16,21 @@ var funcMap = make(map[string]func(w http.ResponseWriter, r *http.Request))
 func findTheFunction(requestedMethod string, w http.ResponseWriter, r *http.Request) {
 	err := model.Error{}
 
+	log.Printf("Fetched requested method >>> %v", requestedMethod)
+
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Adjust allowed origin as needed
+
 	for method, fun := range funcMap {
 		if requestedMethod == method {
 			fun(w, r)
+			return
+		}
+
+		if requestedMethod == "OPTIONS" {
+
+			w.Header().Set("Access-Control-Allow-Headers", "*")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+
 			return
 		}
 	}
