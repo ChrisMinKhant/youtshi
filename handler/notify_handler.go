@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"v1/config/serviceprovider"
 	"v1/model"
@@ -32,6 +33,8 @@ func (notifyHandler *NotifyHandler) notify(w http.ResponseWriter, r *http.Reques
 	notifyService := serviceprovider.GetService("notifyService").(*service.NotifyService)
 
 	util.DecodeJson(r.Body, notifyHandler)
+
+	log.Printf("Fetched notify request >>> %v", notifyHandler)
 
 	notifyService.SetBusNumber(notifyHandler.BusNumber)
 	notifyService.SetArrivedAddress(notifyHandler.ArrivedAddress)

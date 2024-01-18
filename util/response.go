@@ -8,7 +8,10 @@ import (
 
 func ParseResponse(w http.ResponseWriter, responsePayload any, httpStatusCode int) {
 	w.Header().Add("content-type", "application/json")
-	w.WriteHeader(httpStatusCode)
+	w.Header().Add("access-control-allow-origin", "http://localhost:3000")
+	w.Header().Add("access-control-allow-methods", "GET, POST, OPTIONS")
+
+	w.WriteHeader(200)
 
 	log.Printf("Response Payload : %v", responsePayload)
 
