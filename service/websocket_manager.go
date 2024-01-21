@@ -2,7 +2,9 @@ package service
 
 import (
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 	"v1/model"
 
 	"github.com/gorilla/websocket"
@@ -22,6 +24,7 @@ var connectionList = []Client{}
 
 type Client struct {
 	busNumber  int
+	sessionId  int
 	connection *websocket.Conn
 }
 
@@ -64,8 +67,10 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 			continue
 		}
 
+		log.Printf("Fetched wrote websocket message >>> %v", message)
 		err := connectionList[conn].connection.WriteJSON(message)
 
+		log.Print("After writing json to websocket...")
 		if err != nil {
 			return model.NewError().Set(model.I500, 500, err.Error())
 		}
@@ -88,6 +93,11 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 
 	readError := connection.ReadJSON(payload)
 
+	if readError != nil {
+		log.Printf("Fetched read error >>> %v", readError.Error())
+		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
+	}
+
 	// Check if bus exists
 	if status, err := busService.IsBusExist(payload.BusNumber); err == nil {
 		if !status {
@@ -100,21 +110,19 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 			}
 		}
 	} else if err != nil {
-		log.Printf("Fetched read error >>> %v", err.Get()...)
+		log.Printf("Fetched bus exist check error >>> %v", err.Get()...)
 		log.Panicf(err.ErrorMessage)
 	}
 
-	if readError != nil {
-		log.Printf("Fetched read error >>> %v", readError.Error())
-		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
-
-	}
-
-	return Client{
+	createdClient := &Client{
 		busNumber:  payload.BusNumber,
+		sessionId:  rand.New(rand.NewSource(time.Now().UnixNano())).Int(),
 		connection: connection,
 	}
 
+	connection.WriteJSON(*&createdClient.sessionId)
+
+	return *createdClient
 }
 
 func foundPanic(connection *websocket.Conn, errorCode string, errorStatus int) {
