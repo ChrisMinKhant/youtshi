@@ -24,7 +24,7 @@ var connectionList = []Client{}
 
 type Client struct {
 	busNumber  int
-	sessionId  int
+	SessionId  int
 	connection *websocket.Conn
 }
 
@@ -33,6 +33,7 @@ type Manager struct {
 
 type NotifyBus struct {
 	BusNumber int
+	SessionId int
 }
 
 func NewManager() *Manager {
@@ -46,10 +47,9 @@ func NewManager() *Manager {
 func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Started websocket...")
 
-	connection := websocketManager.establishConnection(w, r, &NotifyBus{})
+	websocketManager.establishConnection(w, r, &NotifyBus{})
 
-	connectionList = append(connectionList, connection)
-
+	log.Printf("Total Connection >>> %s", len(connectionList))
 }
 
 // Sending live data to the client
@@ -80,7 +80,7 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 }
 
 // Establishing the connection and return Client struct
-func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *http.Request, payload *NotifyBus) Client {
+func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *http.Request, payload *NotifyBus) {
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
 	// catch panics and return response to the client
@@ -114,15 +114,45 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 		log.Panicf(err.ErrorMessage)
 	}
 
-	createdClient := &Client{
-		busNumber:  payload.BusNumber,
-		sessionId:  rand.New(rand.NewSource(time.Now().UnixNano())).Int(),
-		connection: connection,
+	if payload.SessionId != 0 {
+		foundFlag := false
+
+		for existedConnection := range connectionList {
+			if connectionList[existedConnection].SessionId == payload.SessionId {
+
+				foundFlag = true
+
+				log.Printf("Connection status check >>> %v", connectionList[existedConnection].connection == connection)
+
+				connectionList[existedConnection].busNumber = payload.BusNumber
+				connectionList[existedConnection].connection = connection
+			}
+		}
+
+		createdClient := &Client{
+			busNumber:  payload.BusNumber,
+			SessionId:  payload.SessionId,
+			connection: connection,
+		}
+
+		if !foundFlag {
+			connectionList = append(connectionList, *createdClient)
+		}
+
+		connection.WriteJSON(*createdClient)
+
+	} else {
+		createdClient := &Client{
+			busNumber:  payload.BusNumber,
+			SessionId:  rand.New(rand.NewSource(time.Now().UnixNano())).Int(),
+			connection: connection,
+		}
+
+		connectionList = append(connectionList, *createdClient)
+
+		connection.WriteJSON(*createdClient)
 	}
 
-	connection.WriteJSON(*&createdClient.sessionId)
-
-	return *createdClient
 }
 
 func foundPanic(connection *websocket.Conn, errorCode string, errorStatus int) {
