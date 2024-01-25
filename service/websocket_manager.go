@@ -48,8 +48,6 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 	log.Printf("Started websocket...")
 
 	websocketManager.establishConnection(w, r, &NotifyBus{})
-
-	log.Printf("Total Connection >>> %s", len(connectionList))
 }
 
 // Sending live data to the client
@@ -70,9 +68,10 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 		log.Printf("Fetched wrote websocket message >>> %v", message)
 		err := connectionList[conn].connection.WriteJSON(message)
 
-		log.Print("After writing json to websocket...")
 		if err != nil {
-			return model.NewError().Set(model.I500, 500, err.Error())
+			log.Printf("Error occured at writing message to websocket >>> %v", err.Error())
+
+			connectionList[conn].connection.Close()
 		}
 	}
 
@@ -152,6 +151,8 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 
 		connection.WriteJSON(*createdClient)
 	}
+
+	log.Printf("Total Connection >>> %v", len(connectionList))
 
 }
 

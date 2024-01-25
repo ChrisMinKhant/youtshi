@@ -7,7 +7,7 @@ type NotifyService struct {
 	ArrivedAddress string
 }
 
-var websocketService = NewWebsocketService()
+var websockerManager = NewManager()
 
 func NewNotifyService() *NotifyService {
 	return &NotifyService{}
@@ -23,5 +23,5 @@ func (notifyService *NotifyService) SetArrivedAddress(arriveAddress string) {
 
 // Send notification to client through websocket
 func (notifyService *NotifyService) SendNotification() *model.Error {
-	return websocketService.PushNotification(notifyService.BusNumber, notifyService.ArrivedAddress)
+	return websockerManager.sendNotification(notifyService.BusNumber, notifyService.ArrivedAddress)
 }
