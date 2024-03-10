@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 	"v1/model"
+	clientmanager "v1/util/client_manager"
 
 	"github.com/gorilla/websocket"
 )
@@ -18,6 +19,11 @@ var (
 		CheckOrigin:     func(r *http.Request) bool { return true },
 	}
 )
+
+/*
+* ClientManager for managing websocket connection
+ */
+var clientManager = clientmanager.NewClientManager()
 
 // List of client connection
 var connectionList = []Client{}
@@ -97,6 +103,7 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
 	}
 
+	// Bus handling section
 	// Check if bus exists
 	if status, err := busService.IsBusExist(payload.BusNumber); err == nil {
 		if !status {
@@ -113,41 +120,47 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 		log.Panicf(err.ErrorMessage)
 	}
 
+	// Websocket connection handling section
 	if payload.SessionId != 0 {
 		foundFlag := false
 
-		for existedConnection := range connectionList {
-			if connectionList[existedConnection].SessionId == payload.SessionId {
+		fetchedClientList := clientManager.FetchClientByBusNumber(payload.BusNumber)
+
+		log.Printf("Fetched client >>> %v", fetchedClientList)
+
+		for fetchedClientIndex := range fetchedClientList {
+			log.Printf("Fetched session id of fetched client ::: %v", fetchedClientList[fetchedClientIndex].SessionId)
+			log.Printf("Fetched session id of requested client ::: %v", payload.SessionId)
+
+			if fetchedClientList[fetchedClientIndex].SessionId == payload.SessionId {
+
+				log.Print("Fetched existing session check status ::: [ True ]")
 
 				foundFlag = true
 
-				log.Printf("Connection status check >>> %v", connectionList[existedConnection].connection == connection)
+				log.Printf("Connection status check >>> %v", connectionList[fetchedClientIndex].connection == connection)
 
-				connectionList[existedConnection].busNumber = payload.BusNumber
-				connectionList[existedConnection].connection = connection
+				connectionList[fetchedClientIndex].busNumber = payload.BusNumber
+				connectionList[fetchedClientIndex].connection = connection
 			}
 		}
 
-		createdClient := &Client{
-			busNumber:  payload.BusNumber,
-			SessionId:  payload.SessionId,
-			connection: connection,
-		}
+		// Creating new client
+		createdClient := clientmanager.NewClient(payload.BusNumber, payload.SessionId, connection)
 
+		// Adding new client to linked client through
+		// client manager unless such client already existed.
 		if !foundFlag {
-			connectionList = append(connectionList, *createdClient)
+			log.Printf("Adding new created client to linked client.")
+			clientManager.AddClient(createdClient)
 		}
 
 		connection.WriteJSON(*createdClient)
 
 	} else {
-		createdClient := &Client{
-			busNumber:  payload.BusNumber,
-			SessionId:  rand.New(rand.NewSource(time.Now().UnixNano())).Int(),
-			connection: connection,
-		}
 
-		connectionList = append(connectionList, *createdClient)
+		createdClient := clientmanager.NewClient(payload.BusNumber, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), connection)
+		clientManager.AddClient(createdClient)
 
 		connection.WriteJSON(*createdClient)
 	}
