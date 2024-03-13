@@ -14,8 +14,8 @@ import (
  */
 
 var conf = mysql.Config{
-	User:                 GetEvnValue("db.username"),
-	Passwd:               GetEvnValue("db.password"),
+	User: GetEvnValue("db.username"),
+	// Passwd:               GetEvnValue("db.password"),
 	Net:                  GetEvnValue("db.net"),
 	Addr:                 GetEvnValue("db.address"),
 	DBName:               GetEvnValue("db.DbName"),

@@ -19,3 +19,19 @@ func NewClient(requestedBusNumber int, requestedSessionId int, requestedConnecti
 		connection: requestedConnection,
 	}
 }
+
+func (client *Client) SetBusNumber(busNumber int) {
+	client.busNumber = busNumber
+}
+
+func (client *Client) SetConnection(connectoin *websocket.Conn) {
+	client.connection = connectoin
+}
+
+func (client *Client) GetBusNumber() int {
+	return client.busNumber
+}
+
+func (client *Client) GetConnection() *websocket.Conn {
+	return client.connection
+}

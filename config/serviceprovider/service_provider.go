@@ -18,4 +18,5 @@ func BindService() {
 
 	defer RegisterService("notifyService", service.NewNotifyService())
 	defer RegisterService("websocketService", service.NewWebsocketService())
+	defer RegisterService("web_socketService", service.NewWeb_SocketService())
 }

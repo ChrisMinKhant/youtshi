@@ -25,15 +25,6 @@ var (
  */
 var clientManager = clientmanager.NewClientManager()
 
-// List of client connection
-var connectionList = []Client{}
-
-type Client struct {
-	busNumber  int
-	SessionId  int
-	connection *websocket.Conn
-}
-
 type Manager struct {
 }
 
@@ -59,25 +50,27 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 // Sending live data to the client
 func (websockerManager *Manager) sendNotification(busNumber int, message string) *model.Error {
 
+	fetchedClientList := clientManager.FetchClientByBusNumber(busNumber)
+
 	updateBusInfoError := busService.UpdateBusInfo(busNumber, message)
 
 	if updateBusInfoError != nil {
 		return updateBusInfoError
 	}
 
-	for conn := range connectionList {
+	for clientIndex := range fetchedClientList {
 
-		if connectionList[conn].busNumber != busNumber {
+		if fetchedClientList[clientIndex].GetBusNumber() != busNumber {
 			continue
 		}
 
 		log.Printf("Fetched wrote websocket message >>> %v", message)
-		err := connectionList[conn].connection.WriteJSON(message)
+		err := fetchedClientList[clientIndex].GetConnection().WriteJSON(message)
 
 		if err != nil {
 			log.Printf("Error occured at writing message to websocket >>> %v", err.Error())
 
-			connectionList[conn].connection.Close()
+			fetchedClientList[clientIndex].GetConnection().Close()
 		}
 	}
 
@@ -88,6 +81,7 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *http.Request, payload *NotifyBus) {
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
+	log.Printf("Fetcehd created connection ::: %v", connection.UnderlyingConn().LocalAddr())
 	// catch panics and return response to the client
 	defer foundPanic(connection, model.I500, 500)
 
@@ -126,11 +120,9 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 
 		fetchedClientList := clientManager.FetchClientByBusNumber(payload.BusNumber)
 
-		log.Printf("Fetched client >>> %v", fetchedClientList)
-
 		for fetchedClientIndex := range fetchedClientList {
-			log.Printf("Fetched session id of fetched client ::: %v", fetchedClientList[fetchedClientIndex].SessionId)
-			log.Printf("Fetched session id of requested client ::: %v", payload.SessionId)
+
+			log.Printf("Fetched session id of found client ::: %v", fetchedClientList[fetchedClientIndex].SessionId)
 
 			if fetchedClientList[fetchedClientIndex].SessionId == payload.SessionId {
 
@@ -138,10 +130,10 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 
 				foundFlag = true
 
-				log.Printf("Connection status check >>> %v", connectionList[fetchedClientIndex].connection == connection)
+				fetchedClientList[fetchedClientIndex].SetBusNumber(payload.BusNumber)
+				fetchedClientList[fetchedClientIndex].SetConnection(connection)
 
-				connectionList[fetchedClientIndex].busNumber = payload.BusNumber
-				connectionList[fetchedClientIndex].connection = connection
+				connection.WriteJSON(fetchedClientList[fetchedClientIndex])
 			}
 		}
 
@@ -155,18 +147,19 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 			clientManager.AddClient(createdClient)
 		}
 
-		connection.WriteJSON(*createdClient)
+		connection.WriteJSON(createdClient)
 
 	} else {
 
-		createdClient := clientmanager.NewClient(payload.BusNumber, rand.New(rand.NewSource(time.Now().UnixNano())).Int(), connection)
+		generatedSessionId := rand.New(rand.NewSource(time.Now().UnixNano())).Int()
+
+		log.Printf("Fetched generated session id before creating new client ::: %v", generatedSessionId)
+
+		createdClient := clientmanager.NewClient(payload.BusNumber, generatedSessionId, connection)
 		clientManager.AddClient(createdClient)
 
 		connection.WriteJSON(*createdClient)
 	}
-
-	log.Printf("Total Connection >>> %v", len(connectionList))
-
 }
 
 func foundPanic(connection *websocket.Conn, errorCode string, errorStatus int) {
