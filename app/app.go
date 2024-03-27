@@ -9,33 +9,32 @@ import (
 )
 
 /*
-* ' package app ' is the most important package.
+* The whole application is started
+* from this " app " package.
  */
 
-/*
-* Start the server and listen at the
-* port ' 8080 ' by default or customized port
-* which is defined at ' .env '.
- */
 func StartServer() {
+
+	// predefined port for the application
 	serverPort := ":80"
 
-	if util.GetEvnValue("SERVER_PORT") != "" {
-		log.Println("Custom server port was found! ")
+	// Find if there is any custom port
+	// defined at " .ev " file.
+	if util.GetEvnValue("PORT") != "" {
 		serverPort = util.GetEvnValue("SERVER_PORT")
 	}
 
 	startRoute()
-
 	showBanner()
 
-	log.Printf("Starting the server and listening at port >>> %s", serverPort)
+	log.Printf("Starting the server and listening at port ::: %s", serverPort)
 	http.ListenAndServe(serverPort, nil)
-
 }
 
-// Start the actual routing.
 func startRoute() {
+	// The paths and respective handler functions are mapped
+	// in the " handlerprovider " package. Fetching those paths and
+	// handler functions and passed to http's function.
 	for path, handler := range *handlerprovider.GetHandler() {
 		http.HandleFunc(path, handler.Handle)
 	}
