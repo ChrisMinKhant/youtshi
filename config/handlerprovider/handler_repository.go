@@ -2,6 +2,10 @@ package handlerprovider
 
 import "v1/handler"
 
+/*
+* This is where all the paths and associated handlers are
+* actually exist.
+ */
 var HandlerMap = make(map[string]handler.Handler)
 
 func RegisterHandler(path string, registeredHandler handler.Handler) {

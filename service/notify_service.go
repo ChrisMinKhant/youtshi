@@ -13,6 +13,9 @@ func NewNotifyService() *NotifyService {
 	return &NotifyService{}
 }
 
+/*
+* The following two functions are setter functions.
+ */
 func (notifyService *NotifyService) SetBusNumber(busNumber int) {
 	notifyService.BusNumber = busNumber
 }

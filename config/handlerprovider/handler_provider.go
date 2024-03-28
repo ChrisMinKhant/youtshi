@@ -18,5 +18,5 @@ func BindHandler() {
 	RegisterHandler("/notify", handler.NewNotifyHandler())
 	RegisterHandler("/ws", handler.NewWebsocketHandler())
 
-	log.Println("Binded the handlers.")
+	log.Println("All the handlers are binded.")
 }

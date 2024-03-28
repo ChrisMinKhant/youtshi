@@ -47,11 +47,14 @@ func (websocketManager *Manager) startWebsocket(w http.ResponseWriter, r *http.R
 	websocketManager.establishConnection(w, r, &NotifyBus{})
 }
 
-// Sending live data to the client
+// Send notification to the users with the same bus number
+// using websocket connection.
 func (websockerManager *Manager) sendNotification(busNumber int, message string) *model.Error {
 
+	// Fetch client from nested linked clients by requested bus number.
 	fetchedClientList := clientManager.FetchClientByBusNumber(busNumber)
 
+	// Changed bus arrived address to current arrived address.
 	updateBusInfoError := busService.UpdateBusInfo(busNumber, message)
 
 	if updateBusInfoError != nil {
@@ -64,11 +67,11 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 			continue
 		}
 
-		log.Printf("Fetched wrote websocket message >>> %v", message)
+		log.Printf("Fetched wrote websocket message ::: %v", message)
 		err := fetchedClientList[clientIndex].GetConnection().WriteJSON(message)
 
 		if err != nil {
-			log.Printf("Error occured at writing message to websocket >>> %v", err.Error())
+			log.Printf("Error occured at writing message to websocket ::: %v", err.Error())
 
 			fetchedClientList[clientIndex].GetConnection().Close()
 		}
@@ -79,6 +82,8 @@ func (websockerManager *Manager) sendNotification(busNumber int, message string)
 
 // Establishing the connection and return Client struct
 func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *http.Request, payload *NotifyBus) {
+
+	// Upgrade normal http connection to get websocket connection.
 	connection, err := websocketUpgrader.Upgrade(w, r, nil)
 
 	log.Printf("Fetcehd created connection ::: %v", connection.UnderlyingConn().LocalAddr())
@@ -86,15 +91,13 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 	defer foundPanic(connection, model.I500, 500)
 
 	if err != nil {
-		log.Printf("Fetched read error >>> %v", err.Error())
-		log.Panicf("Found error while upgrading connection >>> %v", err)
+		log.Panicf("Found error while upgrading connection ::: %v", err)
 	}
 
 	readError := connection.ReadJSON(payload)
 
 	if readError != nil {
-		log.Printf("Fetched read error >>> %v", readError.Error())
-		log.Panicf("Found error while reading json message from websocket >>> %v", readError)
+		log.Panicf("Found error while reading json message from websocket ::: %v", readError)
 	}
 
 	// Bus handling section
@@ -105,16 +108,18 @@ func (websocketManager *Manager) establishConnection(w http.ResponseWriter, r *h
 			registerNewBusError := busService.RegisterNewBus(payload.BusNumber)
 
 			if registerNewBusError != nil {
-				log.Printf("Fetched read error >>> %v", registerNewBusError.Get()...)
+				log.Printf("Fetched found error while registering new bus ::: %v", registerNewBusError.Get()...)
 				log.Panicf(registerNewBusError.ErrorMessage)
 			}
 		}
 	} else if err != nil {
-		log.Printf("Fetched bus exist check error >>> %v", err.Get()...)
+		log.Printf("Fetched bus exist check error ::: %v", err.Get()...)
 		log.Panicf(err.ErrorMessage)
 	}
 
-	// Websocket connection handling section
+	// Checking if the user is new or not, by using seesion id
+	// got from front-end. If the user already existed, the new websocket
+	// connection will replace the old one.
 	if payload.SessionId != 0 {
 		foundFlag := false
 

@@ -7,22 +7,29 @@ import (
 	"v1/util"
 )
 
+/*
+* All handlers must implement this interface to be
+* invoked by exposed paths.
+ */
 type Handler interface {
 	Handle(w http.ResponseWriter, r *http.Request)
 }
 
+// In this map, the handlers' functions are mapped with associated http methods.
+// It is like grouping the the routes to its' related function.
 var funcMap = make(map[string]func(w http.ResponseWriter, r *http.Request))
 
 func findTheFunction(requestedMethod string, w http.ResponseWriter, r *http.Request) {
 	err := model.Error{}
 
-	log.Printf("Fetched requested method >>> %v", requestedMethod)
+	log.Printf("Fetched requested method ::: %v", requestedMethod)
 
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000") // Adjust allowed origin as needed
 
+	// Find the function to invoke according to provided http method.
 	for method, fun := range funcMap {
 		if requestedMethod == method {
-			fun(w, r)
+			fun(w, r) // Found function is invoked.
 			return
 		}
 
@@ -35,33 +42,37 @@ func findTheFunction(requestedMethod string, w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	log.Print("Error Found >>> HANDLER_NOT_FOUND")
+	// When there is no handler is found from
+	// above looping. The following is the error response
+	// for HANDLER_NOT_FOUND.
+	log.Print("Fetched found error ::: HANDLER_NOT_FOUND")
 
 	err.SetErrorCode("HANDLER_NOT_FOUND")
 	err.SetStatus(404)
-	err.SetErrorMessage("There is no handler for the address you requested.")
+	err.SetErrorMessage("There is no handler for the path or method requested.")
 
 	util.ParseResponse(w, err, 404)
 }
 
-// Giving back respective response
-func Response(status *bool, w http.ResponseWriter) {
-	response := model.SuccessResponse{}
-	err := model.Error{}
+// func Response(status *bool, w http.ResponseWriter) {
+// 	response := model.SuccessResponse{}
+// 	err := model.Error{}
 
-	if *status {
+// 	if *status {
 
-		response.SetStatus(200)
-		response.SetMessage("OK")
+// 		response.SetStatus(200)
+// 		response.SetMessage("OK")
 
-		util.ParseResponse(w, response, 200)
-	} else {
+// 		util.ParseResponse(w, response, 200)
 
-		err.SetErrorCode("INTERNAL_SERVER_ERROR")
-		err.SetStatus(500)
-		err.SetErrorMessage("Something went wrong.")
+// 	} else {
 
-		util.ParseResponse(w, response, 500)
-	}
+// 		err.SetErrorCode("INTERNAL_SERVER_ERROR")
+// 		err.SetStatus(500)
+// 		err.SetErrorMessage("Something went wrong.")
 
-}
+// 		util.ParseResponse(w, response, 500)
+
+// 	}
+
+// }

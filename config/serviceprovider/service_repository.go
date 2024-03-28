@@ -1,11 +1,9 @@
 package serviceprovider
 
 /*
-* As a name ' handler repository ' this is where all
-* the binded handler are stored.
-* Handlers are binded to their respective path which is like mapping.
+* This is where all the names and associated services are
+* actually exist.
  */
-
 var ServiceMap = make(map[string]any)
 
 func RegisterService(name string, registeredSerive any) {
